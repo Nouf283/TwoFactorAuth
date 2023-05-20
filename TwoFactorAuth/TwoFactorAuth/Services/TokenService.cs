@@ -5,17 +5,20 @@ using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
 using TwoFactorAuth.Entities;
+using TwoFactorAuth.Interfaces;
 
 namespace TwoFactorAuth.Services
 {
-    public class TokenService
+    public class TokenService:ITokenServices
     {
         private readonly IConfiguration _config;
         private readonly SymmetricSecurityKey _key;
         public TokenService(IConfiguration config)
         {
             this._config = config;
+            this._key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Token:Key"]));
         }
 
         public string CreateToken (AppUser appUser)

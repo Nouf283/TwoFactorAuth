@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using TwoFactorAuth.Dtos;
 using TwoFactorAuth.Entities;
+using TwoFactorAuth.Interfaces;
 
 namespace TwoFactorAuth.Controllers
 {
@@ -12,12 +13,14 @@ namespace TwoFactorAuth.Controllers
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly SignInManager<AppUser> _signInManager;
+        private readonly ITokenServices _tokenServices;
 
         public AccountController(UserManager<AppUser>userManager,
-            SignInManager<AppUser> signInManager)
+            SignInManager<AppUser> signInManager,ITokenServices tokenServices)
         {
             this._userManager = userManager;
             this._signInManager = signInManager;
+            this._tokenServices = tokenServices;
         }
 
         [HttpPost]
@@ -38,7 +41,7 @@ namespace TwoFactorAuth.Controllers
             {
                 Email = loginDto.Email,
                 UserName = user.UserName,
-                Token = "this is a token"
+                Token = _tokenServices.CreateToken(user)
             };
         }
 
@@ -62,7 +65,7 @@ namespace TwoFactorAuth.Controllers
             {
                 Email = registerDto.Email,
                 UserName = user.UserName,
-                Token = "this is a token"
+                Token = _tokenServices.CreateToken(user)
             };
         }
     }

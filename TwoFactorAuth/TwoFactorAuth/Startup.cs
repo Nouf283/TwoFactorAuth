@@ -18,6 +18,8 @@ using System.Text;
 using System.Threading.Tasks;
 using TwoFactorAuth.Entities;
 using TwoFactorAuth.Infrustracture.Identity;
+using TwoFactorAuth.Interfaces;
+using TwoFactorAuth.Services;
 
 namespace TwoFactorAuth
 {
@@ -43,20 +45,24 @@ namespace TwoFactorAuth
 
             }).AddEntityFrameworkStores<ApplicationDbContext>()
             .AddSignInManager<SignInManager<AppUser>>();
+
+           
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration.GetValue<string>("Token:Key"))),
-                        ValidIssuer = Configuration.GetValue<string>("Token:Issuer"),
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration.GetSection("Token:Key").Value)),
+                        ValidIssuer = Configuration.GetSection("Token:Issuer").Value,
                         ValidateIssuer = true,
+                        ValidateAudience=false
                     };
                 });
 
-            services.AddAuthorization();
 
+            services.AddAuthorization();
+            services.AddScoped<ITokenServices, TokenService>();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "TwoFactorAuth", Version = "v1" });
