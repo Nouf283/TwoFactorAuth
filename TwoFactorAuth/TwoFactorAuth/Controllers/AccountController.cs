@@ -1,5 +1,8 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using TwoFactorAuth.Dtos;
 using TwoFactorAuth.Entities;
@@ -67,6 +70,23 @@ namespace TwoFactorAuth.Controllers
                 UserName = user.UserName,
                 Token = _tokenServices.CreateToken(user)
             };
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<ActionResult<UserDto>> GetCurrentUser()
+        {
+            var email = HttpContext.User?.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.Email).Value;
+            //  var email = User.FindFirstValue(ClaimTypes.Email);
+            var user = await _userManager.FindByEmailAsync(email);
+
+            return new UserDto
+            {
+                Email = user.Email,
+                UserName = user.UserName,
+                Token = _tokenServices.CreateToken(user)
+            };
+
         }
     }
 }
