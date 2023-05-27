@@ -20,6 +20,8 @@ using TwoFactorAuth.Entities;
 using TwoFactorAuth.Infrustracture.Identity;
 using TwoFactorAuth.Interfaces;
 using TwoFactorAuth.Services;
+using TwoFactorAuth.Settings;
+using WebApp.Services;
 
 namespace TwoFactorAuth
 {
@@ -44,7 +46,8 @@ namespace TwoFactorAuth
             {
 
             }).AddEntityFrameworkStores<ApplicationDbContext>()
-            .AddSignInManager<SignInManager<AppUser>>();
+            .AddSignInManager<SignInManager<AppUser>>().
+            AddDefaultTokenProviders();
 
            
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -62,7 +65,9 @@ namespace TwoFactorAuth
 
 
             services.AddAuthorization();
+            services.Configure<SmtpSettings>(Configuration.GetSection("SMTP"));
             services.AddScoped<ITokenServices, TokenService>();
+            services.AddSingleton<IEmailService, EmailService>();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "TwoFactorAuth", Version = "v1" });

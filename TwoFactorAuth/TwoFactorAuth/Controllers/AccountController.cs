@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using TwoFactorAuth.Dtos;
 using TwoFactorAuth.Entities;
 using TwoFactorAuth.Interfaces;
+using WebApp.Services;
 
 namespace TwoFactorAuth.Controllers
 {
@@ -17,13 +19,16 @@ namespace TwoFactorAuth.Controllers
         private readonly UserManager<AppUser> _userManager;
         private readonly SignInManager<AppUser> _signInManager;
         private readonly ITokenServices _tokenServices;
+        private readonly IEmailService _emailService;
 
-        public AccountController(UserManager<AppUser>userManager,
-            SignInManager<AppUser> signInManager,ITokenServices tokenServices)
+        public AccountController(UserManager<AppUser> userManager,
+            SignInManager<AppUser> signInManager, ITokenServices tokenServices, IEmailService emailService
+            )
         {
             this._userManager = userManager;
             this._signInManager = signInManager;
             this._tokenServices = tokenServices;
+            this._emailService = emailService;
         }
 
         [HttpPost]
@@ -31,11 +36,11 @@ namespace TwoFactorAuth.Controllers
         public async Task<ActionResult<UserDto>> Login(LoginDto loginDto)
         {
             var user = await _userManager.FindByEmailAsync(loginDto.Email);
-            if(user== null)
+            if (user == null)
             {
                 return Unauthorized();
             }
-            var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password,false);
+            var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
             if (!result.Succeeded)
             {
                 return Unauthorized();
@@ -52,24 +57,43 @@ namespace TwoFactorAuth.Controllers
         [Route("register")]
         public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto)
         {
-            var user = new AppUser
+            try
             {
-                Email = registerDto.Email,
-                UserName = registerDto.UserName,
-                FirstName = registerDto.UserName,
-            };
-           
-            var result = await _userManager.CreateAsync(user, registerDto.Password);
-            if (!result.Succeeded)
-            {
-                return Unauthorized();
+                var user = new AppUser
+                {
+                    Email = registerDto.Email,
+                    UserName = registerDto.UserName,
+                    FirstName = registerDto.UserName,
+                };
+
+                var result = await _userManager.CreateAsync(user, registerDto.Password);
+                if (!result.Succeeded)
+                {
+                    return Unauthorized();
+                }
+                var confirmationToken = await this._userManager.GenerateEmailConfirmationTokenAsync(user);
+                var confirmationLink = Url.PageLink(pageName: "/Account/ConfirmEmail",
+                    values: new { userId = user.Id, token = confirmationToken });
+
+                await _emailService.SendAsync("noufawal0311@gmail.com",
+                    user.Email,
+                    "Please confirm your email",
+                    $"Please click on this link to confirm your email address: {confirmationLink}");
+                return new UserDto
+                {
+                    Email = registerDto.Email,
+                    UserName = user.UserName,
+                    // Token = _tokenServices.CreateToken(user),
+                    Token = confirmationToken,
+                    Id = user.Id
+                };
+
             }
-            return new UserDto
+            catch(Exception ex)
             {
-                Email = registerDto.Email,
-                UserName = user.UserName,
-                Token = _tokenServices.CreateToken(user)
-            };
+                new Exception(ex.Message);
+            }
+           
         }
 
         [HttpGet]
