@@ -41,16 +41,32 @@ namespace TwoFactorAuth.Controllers
                 return Unauthorized();
             }
             var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
+           
             if (!result.Succeeded)
             {
                 return Unauthorized();
             }
-            return new UserDto
+            if (result.RequiresTwoFactor)
             {
-                Email = loginDto.Email,
-                UserName = user.UserName,
-                Token = _tokenServices.CreateToken(user)
-            };
+                return
+                    new UserDto
+                    {
+                        Email = loginDto.Email,
+                        IsTwoFactor = true
+                    };
+            }
+            else
+            {
+                return new UserDto
+                {
+                    Email = loginDto.Email,
+                    UserName = user.UserName,
+                    Token = _tokenServices.CreateToken(user),
+                    IsTwoFactor=false
+                };
+
+            }
+           
         }
 
         [HttpPost]

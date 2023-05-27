@@ -44,6 +44,8 @@ namespace TwoFactorAuth
             });
             services.AddIdentityCore<AppUser>(options =>
             {
+                options.User.RequireUniqueEmail = true;
+                options.SignIn.RequireConfirmedEmail = true;
 
             }).AddEntityFrameworkStores<ApplicationDbContext>()
             .AddSignInManager<SignInManager<AppUser>>().
