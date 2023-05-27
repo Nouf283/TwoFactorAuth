@@ -6,15 +6,16 @@ using System.Net;
 using System.Net.Mail;
 using System.Threading.Tasks;
 using TwoFactorAuth.Interfaces;
-using WebApp.Settings;
+using TwoFactorAuth.Settings;
+
 
 namespace WebApp.Services
 {
     public class EmailService : IEmailService
     {
-        private readonly IOptions<SmtpSetting> smtpSetting;
+        private readonly IOptions<SmtpSettings> smtpSetting;
 
-        public EmailService(IOptions<SmtpSetting> smtpSetting)
+        public EmailService(IOptions<SmtpSettings> smtpSetting)
         {
             this.smtpSetting = smtpSetting;
         }
