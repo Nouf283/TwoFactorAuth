@@ -57,21 +57,21 @@ namespace TwoFactorAuth.Controllers
         [Route("register")]
         public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto)
         {
+            string confirmationToken = null;
+            var user = new AppUser
+            {
+                Email = registerDto.Email,
+                UserName = registerDto.UserName,
+                FirstName = registerDto.UserName,
+            };
             try
             {
-                var user = new AppUser
-                {
-                    Email = registerDto.Email,
-                    UserName = registerDto.UserName,
-                    FirstName = registerDto.UserName,
-                };
-
                 var result = await _userManager.CreateAsync(user, registerDto.Password);
                 if (!result.Succeeded)
                 {
                     return Unauthorized();
                 }
-                var confirmationToken = await this._userManager.GenerateEmailConfirmationTokenAsync(user);
+                confirmationToken = await this._userManager.GenerateEmailConfirmationTokenAsync(user);
                 var confirmationLink = Url.PageLink(pageName: "/Account/ConfirmEmail",
                     values: new { userId = user.Id, token = confirmationToken });
 
@@ -79,21 +79,20 @@ namespace TwoFactorAuth.Controllers
                     user.Email,
                     "Please confirm your email",
                     $"Please click on this link to confirm your email address: {confirmationLink}");
-                return new UserDto
-                {
-                    Email = registerDto.Email,
-                    UserName = user.UserName,
-                    // Token = _tokenServices.CreateToken(user),
-                    Token = confirmationToken,
-                    Id = user.Id
-                };
-
             }
             catch(Exception ex)
             {
                 new Exception(ex.Message);
             }
-           
+
+            return new UserDto
+            {
+                Email = registerDto.Email,
+                UserName = user.UserName,
+                // Token = _tokenServices.CreateToken(user),
+                Token = confirmationToken,
+                Id = user.Id
+            };
         }
 
         [HttpGet]
