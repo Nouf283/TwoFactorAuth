@@ -6,24 +6,25 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using WebApp.Data.Account;
+using TwoFactorAuth.Entities;
+using TwoFactorAuth.Interfaces;
 using WebApp.Services;
 
 namespace WebApp.Pages.Account
 {
     public class LoginTwoFactorModel : PageModel
     {
-        private readonly UserManager<User> userManager;
+        private readonly UserManager<AppUser> userManager;
         private readonly IEmailService emailService;
-        private readonly SignInManager<User> signInManager;
+        private readonly SignInManager<AppUser> signInManager;
 
         [BindProperty]
         public EmailMFA EmailMFA { get; set; }
 
         public LoginTwoFactorModel(
-            UserManager<User> userManager, 
+            UserManager<AppUser> userManager, 
             IEmailService emailService,
-            SignInManager<User> signInManager)
+            SignInManager<AppUser> signInManager)
         {
             this.userManager = userManager;
             this.emailService = emailService;

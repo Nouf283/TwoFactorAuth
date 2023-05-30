@@ -52,38 +52,38 @@ namespace TwoFactorAuth.Controllers
                 "My Web App's OTP",
                 $"Please use this code as the OTP: {securityCode}");
         }
-        [HttpPost]
-        public async Task<IActionResult> OnPostAsync()
-        {
-          //  if (!ModelState.IsValid) return Page();
+        //[HttpPost]
+        //public async Task<IActionResult> OnPostAsync()
+        //{
+        //  //  if (!ModelState.IsValid) return Page();
 
-            var result = await _signInManager.TwoFactorSignInAsync("Email",
-                this.EmailMFA.SecurityCode,
-                this.EmailMFA.RememberMe,
-                false);
+        //    var result = await _signInManager.TwoFactorSignInAsync("Email",
+        //        this.EmailMFA.SecurityCode,
+        //        this.EmailMFA.RememberMe,
+        //        false);
 
-            if (result.Succeeded)
-            {
-               // return RedirectToPage("/Index");
-               //login with token
-            }
-            else
-            {
-                //if (result.IsLockedOut)
-                //{
-                //    ModelState.AddModelError("Login2FA", "You are locked out.");
-                //}
-                //else
-                //{
-                //    ModelState.AddModelError("Login2FA", "Failed to login.");
-                //}
+        //    if (result.Succeeded)
+        //    {
+        //       // return RedirectToPage("/Index");
+        //       //login with token
+        //    }
+        //    else
+        //    {
+        //        //if (result.IsLockedOut)
+        //        //{
+        //        //    ModelState.AddModelError("Login2FA", "You are locked out.");
+        //        //}
+        //        //else
+        //        //{
+        //        //    ModelState.AddModelError("Login2FA", "Failed to login.");
+        //        //}
 
-               // return Page();
+        //       // return Page();
 
-                //return error
-                //return null;
-            }
-        }
+        //        //return error
+        //        //return null;
+        //    }
+        //}
     }
 }
 public class EmailMFA
