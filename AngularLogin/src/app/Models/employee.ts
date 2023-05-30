@@ -15,3 +15,17 @@ export class Employee{
   salary:number;
 
 }
+
+export class User{
+  constructor() {
+    this.id = 0;
+ 
+    this.password ="";
+  }
+  id: number;
+  email: string;
+  password: string;
+  token!: string;
+}
+
+
