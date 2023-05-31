@@ -51,7 +51,7 @@ namespace TwoFactorAuth
             .AddSignInManager<SignInManager<AppUser>>().
             AddDefaultTokenProviders();
 
-           
+
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
@@ -61,8 +61,12 @@ namespace TwoFactorAuth
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration.GetSection("Token:Key").Value)),
                         ValidIssuer = Configuration.GetSection("Token:Issuer").Value,
                         ValidateIssuer = true,
-                        ValidateAudience=false
+                        ValidateAudience = false
                     };
+                }).AddCookie(IdentityConstants.TwoFactorUserIdScheme, o =>
+                {
+                    o.Cookie.Name = IdentityConstants.TwoFactorUserIdScheme;
+                    o.ExpireTimeSpan = TimeSpan.FromMinutes(5);
                 });
 
 

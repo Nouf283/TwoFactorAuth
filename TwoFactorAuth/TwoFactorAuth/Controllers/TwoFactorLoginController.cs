@@ -36,7 +36,8 @@ namespace TwoFactorAuth.Controllers
         }
 
         [HttpGet]
-        public async Task OnGetAsync(string email, bool rememberMe)
+        [Route("OnGetOTP")]
+        public async Task OnGetOTP([FromQuery] string email, [FromQuery] bool rememberMe)
         {
             var user = await _userManager.FindByEmailAsync(email);
 

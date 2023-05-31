@@ -25,6 +25,7 @@ namespace TwoFactorAuth.Controllers
         private readonly SignInManager<AppUser> _signInManager;
         private readonly ITokenServices _tokenServices;
         private readonly IEmailService _emailService;
+        public EmailMFA EmailMFA { get; set; }
 
         public AccountController(UserManager<AppUser> userManager,
             SignInManager<AppUser> signInManager, ITokenServices tokenServices, IEmailService emailService
@@ -34,6 +35,7 @@ namespace TwoFactorAuth.Controllers
             this._signInManager = signInManager;
             this._tokenServices = tokenServices;
             this._emailService = emailService;
+            this.EmailMFA = new EmailMFA();
         }
 
         [HttpPost]
@@ -45,33 +47,86 @@ namespace TwoFactorAuth.Controllers
             {
                 return Unauthorized();
             }
-            var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
+            var result = await _signInManager.PasswordSignInAsync(loginDto.Email, loginDto.Password, true, false);
+              
+          //  var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
            
-            if (!result.Succeeded)
+            if (result.Succeeded)
             {
                 return Unauthorized();
             }
-            if (result.RequiresTwoFactor)
+            else
             {
-                return
-                    new UserDto
+                if (!result.RequiresTwoFactor)
+                {
+                    var user1 = await _userManager.FindByEmailAsync(loginDto.Email);
+
+                    this.EmailMFA.SecurityCode = string.Empty;
+                    this.EmailMFA.RememberMe = true;
+
+                    // Generate the code
+                    var securityCode = await _userManager.GenerateTwoFactorTokenAsync(user, "Email");
+
+                    // Send to the user
+                    await _emailService.SendAsync("noufawal0311@gmail.com",
+                        loginDto.Email,
+                        "My Web App's OTP",
+                        $"Please use this code as the OTP: {securityCode}");
+
+                    return
+                        new UserDto
+                        {
+                            Email = loginDto.Email,
+                            UserName = user.UserName,
+                            Token = _tokenServices.CreateToken(user),
+                            IsTwoFactor = true
+                        };
+
+                }
+                else
+                {
+                    return new UserDto
                     {
                         Email = loginDto.Email,
-                        IsTwoFactor = true
+                        UserName = user.UserName,
+                        Token = _tokenServices.CreateToken(user),
+                        IsTwoFactor = false
                     };
+
+                }
+
+            }
+            
+           
+        }
+
+        [HttpPost]
+        [Route("twoFactorLoginPost")]
+        public async Task<IActionResult> TwoFactorLoginPost(Credential credential)
+        {
+            //  if (!ModelState.IsValid) return Page();
+
+            var result = await _signInManager.TwoFactorSignInAsync("Email",
+                credential.Securitycode,
+                true,
+                false);
+
+            if (result.Succeeded)
+            {
+                //return new UserDto
+                //{
+                //    Email = credential.Email,
+                //    UserName = user.UserName,
+                //    // Token = _tokenServices.CreateToken(user),
+                //    Token = confirmationToken,
+                //    Id = user.Id
+                //};
+                return null;
             }
             else
             {
-                return new UserDto
-                {
-                    Email = loginDto.Email,
-                    UserName = user.UserName,
-                    Token = _tokenServices.CreateToken(user),
-                    IsTwoFactor=false
-                };
-
+                return Unauthorized();
             }
-           
         }
 
         [HttpPost]
@@ -84,6 +139,7 @@ namespace TwoFactorAuth.Controllers
                 Email = registerDto.Email,
                 UserName = registerDto.UserName,
                 FirstName = registerDto.UserName,
+                TwoFactorEnabled=true
             };
             try
             {
@@ -149,4 +205,11 @@ namespace TwoFactorAuth.Controllers
 
         }
     }
+}
+
+public class Credential
+{
+    public string Email { get; set; }
+    public string  Securitycode { get; set; }
+
 }
