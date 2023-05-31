@@ -1,10 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using System;
 using System.Linq;
 using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using TwoFactorAuth.Dtos;
 using TwoFactorAuth.Entities;
 using TwoFactorAuth.Interfaces;
@@ -88,8 +92,16 @@ namespace TwoFactorAuth.Controllers
                     return Unauthorized();
                 }
                 confirmationToken = await this._userManager.GenerateEmailConfirmationTokenAsync(user);
-                var confirmationLink = Url.PageLink(pageName: "/Account/ConfirmEmail",
-                    values: new { userId = user.Id, token = confirmationToken });
+                string codeHtmlVersion = HttpUtility.UrlEncode(confirmationToken);
+
+               // var callbackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code = codeHtmlVersion }, protocol: Request.Url.Scheme);
+                var confirmationLink = Url.Action(nameof(ConfirmEmail), "Account", new { userId = user.Id, token = confirmationToken });
+                //var confirmationLink = Url.Action(pageName: "/Account/ConfirmEmail",
+                //    values: new { userId = user.Id, token = confirmationToken });
+
+                //byte[] tokenGeneratedBytes = Encoding.UTF8.GetBytes(confirmationToken);
+                //var codeEncoded = WebEncoders.Base64UrlEncode(tokenGeneratedBytes);
+                //var link = Url.Action("nameof(ConfirmEmail)", "Account", new { userId = user.Id, token = codeEncoded },HttpContext.Request.Scheme);
 
                 await _emailService.SendAsync("noufawal0311@gmail.com",
                     user.Email,
@@ -109,6 +121,16 @@ namespace TwoFactorAuth.Controllers
                 Token = confirmationToken,
                 Id = user.Id
             };
+        }
+
+        [HttpGet]
+        [Route("ConfirmEmail")]
+        public async Task<ActionResult<UserDto>> ConfirmEmail([FromQuery] string token, [FromQuery] string userId)
+        {
+            var userEntity = await _userManager.FindByIdAsync(userId);
+            var confirmResult = await _userManager.ConfirmEmailAsync(userEntity, token);
+
+            return null;
         }
 
         [HttpGet]
