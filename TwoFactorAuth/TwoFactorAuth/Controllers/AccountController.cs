@@ -102,26 +102,26 @@ namespace TwoFactorAuth.Controllers
 
         [HttpPost]
         [Route("twoFactorLoginPost")]
-        public async Task<IActionResult> TwoFactorLoginPost(Credential credential)
+        public async Task<ActionResult<UserDto>> TwoFactorLoginPost(Credential credential)
         {
             //  if (!ModelState.IsValid) return Page();
+            var user = await _userManager.FindByEmailAsync(credential.Email);
+            var result = await _userManager.VerifyTwoFactorTokenAsync(user, "Email", credential.Securitycode);
+            //var result = await _signInManager.TwoFactorSignInAsync("Email",
+            //    credential.Securitycode,
+            //    true,
+            //    false);
 
-            var result = await _signInManager.TwoFactorSignInAsync("Email",
-                credential.Securitycode,
-                true,
-                false);
-
-            if (result.Succeeded)
+            if (result== true)
             {
-                //return new UserDto
-                //{
-                //    Email = credential.Email,
-                //    UserName = user.UserName,
-                //    // Token = _tokenServices.CreateToken(user),
-                //    Token = confirmationToken,
-                //    Id = user.Id
-                //};
-                return null;
+                return new UserDto
+                {
+                    Email = credential.Email,
+                    UserName = user.UserName,
+                    Token = _tokenServices.CreateToken(user),
+                    Id = user.Id
+                };
+                //return null;
             }
             else
             {
