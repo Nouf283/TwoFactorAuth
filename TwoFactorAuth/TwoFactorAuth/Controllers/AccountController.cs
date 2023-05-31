@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
@@ -86,29 +87,27 @@ namespace TwoFactorAuth.Controllers
             };
             try
             {
+                var clientURI = "https://localhost:44312/Account/ConfirmEmail";
                 var result = await _userManager.CreateAsync(user, registerDto.Password);
                 if (!result.Succeeded)
                 {
                     return Unauthorized();
                 }
                 confirmationToken = await this._userManager.GenerateEmailConfirmationTokenAsync(user);
-                string codeHtmlVersion = HttpUtility.UrlEncode(confirmationToken);
+                var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                var param = new Dictionary<string, string?>
+                        {
+                            {"token", confirmationToken },
+                            {"userId", user.Id }
+                        };
+                var callback = QueryHelpers.AddQueryString(clientURI, param);
 
-               // var callbackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code = codeHtmlVersion }, protocol: Request.Url.Scheme);
-                var confirmationLink = Url.Action(nameof(ConfirmEmail), "Account", new { userId = user.Id, token = confirmationToken });
-                //var confirmationLink = Url.Action(pageName: "/Account/ConfirmEmail",
-                //    values: new { userId = user.Id, token = confirmationToken });
-
-                //byte[] tokenGeneratedBytes = Encoding.UTF8.GetBytes(confirmationToken);
-                //var codeEncoded = WebEncoders.Base64UrlEncode(tokenGeneratedBytes);
-                //var link = Url.Action("nameof(ConfirmEmail)", "Account", new { userId = user.Id, token = codeEncoded },HttpContext.Request.Scheme);
-
-                await _emailService.SendAsync("noufawal0311@gmail.com",
+                await _emailService.SendAsync("cleinttest123@gmail.com",
                     user.Email,
                     "Please confirm your email",
-                    $"Please click on this link to confirm your email address: {confirmationLink}");
+                    $"Please click on this link to confirm your email address: {callback}");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 new Exception(ex.Message);
             }
